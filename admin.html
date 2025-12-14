@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Secure Access</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- local css  -->
+  <link rel="stylesheet" type="text/css" href="./admin-assets/admin.css">
+
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Login Section -->
+    <div id="loginBox">
+      <div class="login-box fade-in">
+        <div class="mb-4">
+          <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+          <h2 class="fw-bold">Admin Panel</h2>
+          <p class="text-muted">Secure access required</p>
+        </div>
+        
+        <div class="security-notice">
+          <i class="fas fa-shield-alt me-2"></i>
+          <strong>Security Notice:</strong> This area is restricted to authorized personnel only.
+        </div>
+        
+        <div class="mb-3">
+          <input id="username" class="form-control mb-3" placeholder="Username" autocomplete="username">
+          <div class="password-container">
+            <input id="password" type="password" class="form-control" placeholder="Password" autocomplete="current-password">
+            <button type="button" class="password-toggle" onclick="togglePassword()">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary w-100" onclick="login()">
+          <i class="fas fa-sign-in-alt me-2"></i>Login
+        </button>
+        
+        <div class="mt-3 text-muted small">
+          <i class="fas fa-info-circle me-1"></i>
+          Ensure you're on a secure connection before logging in
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="uploadBox" style="display:none;">
+      <div class="admin-header">
+        <h2><i class="fas fa-cogs me-2"></i>Admin Dashboard</h2>
+        <p class="mb-0">Manage your posts and content</p>
+      </div>
+      
+      <div class="admin-content">
+        <button class="btn btn-outline-danger logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </button>
+        
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-plus-circle me-2"></i>Create New Post</h5>
+                
+                <input id="title" class="form-control mb-3" placeholder="Post Title">
+                
+                <!-- Rich Text Editor -->
+                <div class="mb-3">
+                  <label class="form-label">Post Content</label>
+                  <div class="editor-toolbar">
+                    <button type="button" onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button type="button" onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button type="button" onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                    <button type="button" onclick="formatText('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                    <button type="button" onclick="formatText('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    <button type="button" onclick="formatText('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button type="button" onclick="formatText('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button type="button" onclick="formatText('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    <button type="button" onclick="clearFormatting()" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+                  </div>
+                  <div 
+                    id="paragraph" 
+                    class="editor-content" 
+                    contenteditable="true" 
+                    placeholder="Write your post content here..."
+                    oninput="updateParagraphValue()"
+                  ></div>
+                </div>
+                
+                <input id="imageURL" class="form-control mb-3" placeholder="Image URL">
+                <!-- Added Trailer Link Field -->
+                <input id="trailerLink" class="form-control mb-3" placeholder="Trailer Link (optional)">
+                <input id="downloadLink" class="form-control mb-3" placeholder="Download Link (optional)">
+                
+                <div class="form-check mb-3">
+                  <input type="checkbox" id="hasDownload" class="form-check-input">
+                  <label class="form-check-label">Enable Download Button</label>
+                </div>
+                
+                <button class="btn btn-success w-100" onclick="uploadPost()">
+                  <i class="fas fa-upload me-2"></i>Publish Post
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>Quick Stats</h5>
+                <div id="statsContainer" class="text-center">
+                  <div class="loading-spinner">
+                    <div class="spinner"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Post History Section -->
+        <div class="mt-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="fas fa-history me-2"></i>Post History</h4>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadPostHistory()">
+              <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+          </div>
+          
+          <div id="postHistory" class="mt-3">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Post Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Post</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="editId" type="hidden">
+          <input id="editTitle" class="form-control mb-3" placeholder="Title">
+          
+          <!-- Rich Text Editor for Edit Modal -->
+          <div class="mb-3">
+            <label class="form-label">Post Content</label>
+            <div class="editor-toolbar">
+              <button type="button" onclick="formatEditText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+              <button type="button" onclick="formatEditText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+              <button type="button" onclick="formatEditText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+              <button type="button" onclick="formatEditText('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+              <button type="button" onclick="formatEditText('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+              <button type="button" onclick="formatEditText('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+              <button type="button" onclick="formatEditText('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+              <button type="button" onclick="formatEditText('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+              <button type="button" onclick="clearEditFormatting()" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+            </div>
+            <div 
+              id="editParagraph" 
+              class="editor-content" 
+              contenteditable="true" 
+              placeholder="Write your post content here..."
+              oninput="updateEditParagraphValue()"
+            ></div>
+          </div>
+          
+          <input id="editImageURL" class="form-control mb-3" placeholder="Image URL">
+          <!-- Added Trailer Link Field for Edit -->
+          <input id="editTrailerLink" class="form-control mb-3" placeholder="Trailer Link (optional)">
+          <input id="editDownloadLink" class="form-control mb-3" placeholder="Download Link">
+          <div class="form-check">
+            <input type="checkbox" id="editHasDownload" class="form-check-input">
+            <label class="form-check-label">Enable Download Button</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updatePost()">
+            <i class="fas fa-save me-1"></i>Update Post
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- local js  -->
+  <script src="./admin-assets/admin.js"></script>
+</body>
+</html>

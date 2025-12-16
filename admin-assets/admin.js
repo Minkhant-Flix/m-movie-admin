@@ -5,12 +5,18 @@ const MAX_LOGIN_ATTEMPTS = 3;
 let paragraphValue = '';
 let editParagraphValue = '';
 
+// New variables for genres and rating
+let selectedGenres = [];
+let editSelectedGenres = [];
+let currentRating = 0;
+let editCurrentRating = 0;
+
 // Debug logging
 function debugLog(message, data = null) {
     console.log(`[Admin] ${message}`, data || '');
 }
 
-// Rich Text Editor Functions
+// ==================== RICH TEXT EDITOR FUNCTIONS ====================
 function formatText(command, value = null) {
     document.getElementById('paragraph').focus();
     document.execCommand(command, false, value);
@@ -45,7 +51,7 @@ function updateEditParagraphValue() {
     editParagraphValue = document.getElementById('editParagraph').innerHTML;
 }
 
-// Password visibility toggle
+// ==================== PASSWORD TOGGLE ====================
 function togglePassword() {
     const passwordField = document.getElementById("password");
     const toggleIcon = document.querySelector(".password-toggle i");
@@ -61,27 +67,250 @@ function togglePassword() {
     }
 }
 
-// Enhanced login function
+// ==================== GENRES FUNCTIONS ====================
+function initGenres() {
+    selectedGenres = [];
+    editSelectedGenres = [];
+    updateGenresDisplay();
+    updateEditGenresDisplay();
+}
+
+function addGenreFromInput() {
+    const input = document.getElementById('genreInput');
+    const genre = input.value.trim();
+    
+    if (genre && !selectedGenres.includes(genre)) {
+        selectedGenres.push(genre);
+        updateGenresDisplay();
+    }
+    input.value = '';
+    input.focus();
+}
+
+function addQuickGenre(genre) {
+    if (!selectedGenres.includes(genre)) {
+        selectedGenres.push(genre);
+        updateGenresDisplay();
+    }
+}
+
+function updateGenresDisplay() {
+    const container = document.getElementById('selectedGenres');
+    container.innerHTML = '';
+    
+    if (selectedGenres.length === 0) {
+        container.innerHTML = '<span class="text-muted small">No genres selected</span>';
+        return;
+    }
+    
+    selectedGenres.forEach((genre, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'genre-tag';
+        tag.innerHTML = `
+            ${genre}
+            <button type="button" class="genre-remove" onclick="removeGenre(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+function removeGenre(index) {
+    selectedGenres.splice(index, 1);
+    updateGenresDisplay();
+}
+
+function addEditGenreFromInput() {
+    const input = document.getElementById('editGenreInput');
+    const genre = input.value.trim();
+    
+    if (genre && !editSelectedGenres.includes(genre)) {
+        editSelectedGenres.push(genre);
+        updateEditGenresDisplay();
+    }
+    input.value = '';
+    input.focus();
+}
+
+function addEditQuickGenre(genre) {
+    if (!editSelectedGenres.includes(genre)) {
+        editSelectedGenres.push(genre);
+        updateEditGenresDisplay();
+    }
+}
+
+function updateEditGenresDisplay() {
+    const container = document.getElementById('editSelectedGenres');
+    container.innerHTML = '';
+    
+    if (editSelectedGenres.length === 0) {
+        container.innerHTML = '<span class="text-muted small">No genres selected</span>';
+        return;
+    }
+    
+    editSelectedGenres.forEach((genre, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'genre-tag';
+        tag.innerHTML = `
+            ${genre}
+            <button type="button" class="genre-remove" onclick="removeEditGenre(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+function removeEditGenre(index) {
+    editSelectedGenres.splice(index, 1);
+    updateEditGenresDisplay();
+}
+
+// ==================== RATING FUNCTIONS ====================
+function initRating() {
+    currentRating = 0;
+    editCurrentRating = 0;
+    setupRatingStars();
+    setupEditRatingStars();
+}
+
+function setupRatingStars() {
+    const stars = document.querySelectorAll('#ratingStars .star');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const value = parseInt(star.getAttribute('data-value'));
+            currentRating = value;
+            updateRatingDisplay();
+        });
+        
+        star.addEventListener('mouseover', () => {
+            const value = parseInt(star.getAttribute('data-value'));
+            highlightStars(value, 'ratingStars');
+        });
+    });
+    
+    document.getElementById('ratingStars').addEventListener('mouseleave', () => {
+        highlightStars(currentRating, 'ratingStars');
+    });
+}
+
+function setupEditRatingStars() {
+    const stars = document.querySelectorAll('#editRatingStars .star');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const value = parseInt(star.getAttribute('data-value'));
+            editCurrentRating = value;
+            updateEditRatingDisplay();
+        });
+        
+        star.addEventListener('mouseover', () => {
+            const value = parseInt(star.getAttribute('data-value'));
+            highlightStars(value, 'editRatingStars');
+        });
+    });
+    
+    document.getElementById('editRatingStars').addEventListener('mouseleave', () => {
+        highlightStars(editCurrentRating, 'editRatingStars');
+    });
+}
+
+function highlightStars(rating, containerId) {
+    const stars = document.querySelectorAll(`#${containerId} .star i`);
+    
+    stars.forEach((star, index) => {
+        const starValue = index + 1;
+        
+        if (starValue <= rating) {
+            star.className = 'fas fa-star';
+            star.style.color = '#ffc107';
+        } else {
+            star.className = 'far fa-star';
+            star.style.color = '#ccc';
+        }
+    });
+}
+
+function updateRatingDisplay() {
+    const input = document.getElementById('ratingValue');
+    const text = document.getElementById('ratingText');
+    
+    input.value = currentRating;
+    highlightStars(currentRating, 'ratingStars');
+    
+    if (currentRating > 0) {
+        text.innerHTML = `<span class="text-warning"><i class="fas fa-star"></i> ${currentRating}/5</span>`;
+    } else {
+        text.textContent = 'No rating selected';
+    }
+}
+
+function updateEditRatingDisplay() {
+    const input = document.getElementById('editRatingValue');
+    const text = document.getElementById('editRatingText');
+    
+    input.value = editCurrentRating;
+    highlightStars(editCurrentRating, 'editRatingStars');
+    
+    if (editCurrentRating > 0) {
+        text.innerHTML = `<span class="text-warning"><i class="fas fa-star"></i> ${editCurrentRating}/5</span>`;
+    } else {
+        text.textContent = 'No rating selected';
+    }
+}
+
+function updateStarsFromInput() {
+    const input = document.getElementById('ratingValue');
+    let value = parseFloat(input.value);
+    
+    if (isNaN(value) || value < 0) value = 0;
+    if (value > 5) value = 5;
+    
+    currentRating = value;
+    updateRatingDisplay();
+}
+
+function updateEditStarsFromInput() {
+    const input = document.getElementById('editRatingValue');
+    let value = parseFloat(input.value);
+    
+    if (isNaN(value) || value < 0) value = 0;
+    if (value > 5) value = 5;
+    
+    editCurrentRating = value;
+    updateEditRatingDisplay();
+}
+
+function clearRating() {
+    currentRating = 0;
+    updateRatingDisplay();
+}
+
+function clearEditRating() {
+    editCurrentRating = 0;
+    updateEditRatingDisplay();
+}
+
+// ==================== LOGIN FUNCTIONS ====================
 async function login() {
     const user = document.getElementById("username").value.trim();
     const pass = document.getElementById("password").value.trim();
     
     debugLog('Login attempt:', { user, pass });
     
-    // Basic validation
     if (!user || !pass) {
         showAlert("Please enter both username and password", "warning");
         return;
     }
     
-    // Check login attempts
     if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
         showAlert("Too many failed attempts. Please try again later.", "danger");
         return;
     }
     
     try {
-        // Use JSONP for login (bypass CORS)
         const loginSuccess = await loginWithJSONP(user, pass);
         
         if (loginSuccess) {
@@ -89,13 +318,11 @@ async function login() {
             document.getElementById("loginBox").style.display = "none";
             document.getElementById("uploadBox").style.display = "block";
             
-            // Load posts and stats
             await loadPostsWithJSONP();
             await loadStats();
             
             showAlert("Login successful! Welcome back.", "success");
             
-            // Store login state
             localStorage.setItem('adminLoggedIn', 'true');
             localStorage.setItem('loginTime', Date.now());
             localStorage.setItem('username', user);
@@ -116,12 +343,10 @@ async function login() {
     }
 }
 
-// JSONP login method - FIXED VERSION
 function loginWithJSONP(user, pass) {
     return new Promise((resolve, reject) => {
         const callbackName = 'loginCallback_' + Date.now();
         
-        // Define callback function BEFORE creating script
         window[callbackName] = function(data) {
             delete window[callbackName];
             if (script.parentElement) {
@@ -153,7 +378,6 @@ function loginWithJSONP(user, pass) {
             reject(new Error('JSONP request failed'));
         };
         
-        // Timeout
         setTimeout(() => {
             if (script.parentElement) {
                 document.body.removeChild(script);
@@ -168,7 +392,6 @@ function loginWithJSONP(user, pass) {
     });
 }
 
-// Check for existing login session
 function checkExistingLogin() {
     const loggedIn = localStorage.getItem('adminLoggedIn');
     const loginTime = localStorage.getItem('loginTime');
@@ -177,32 +400,27 @@ function checkExistingLogin() {
     if (loggedIn === 'true' && loginTime && username) {
         const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
         
-        // Auto-login if less than 8 hours
         if (hoursSinceLogin < 8) {
             debugLog('Auto-login detected for user:', username);
             document.getElementById("loginBox").style.display = "none";
             document.getElementById("uploadBox").style.display = "block";
             
-            // Load posts using JSONP
             loadPostsWithJSONP().then(() => {
                 loadStats();
                 showAlert(`Welcome back, ${username}!`, "info");
             }).catch(e => {
                 console.error('Auto-login posts load failed:', e);
-                // Show warning but stay logged in
                 showAlert(`Welcome back, ${username}! Some features may not work properly.`, "warning");
             });
             
             return true;
         } else {
-            // Session expired
             localStorage.clear();
         }
     }
     return false;
 }
 
-// Logout function
 function logout() {
     if(confirm("Are you sure you want to logout?")) {
         document.getElementById("uploadBox").style.display = "none";
@@ -210,31 +428,38 @@ function logout() {
         document.getElementById("username").value = "";
         document.getElementById("password").value = "";
         
-        // Clear editor content
         document.getElementById('paragraph').innerHTML = '';
         paragraphValue = '';
         
-        // Clear login session
+        // Clear genres and rating
+        selectedGenres = [];
+        currentRating = 0;
+        updateGenresDisplay();
+        updateRatingDisplay();
+        
         localStorage.clear();
         
         showAlert("You have been logged out successfully.", "info");
     }
 }
 
-// Enhanced upload post - UPDATED to use form submission
+// ==================== POST FUNCTIONS ====================
 async function uploadPost() {
     const title = document.getElementById("title").value.trim();
     const imageURL = document.getElementById("imageURL").value.trim();
-    const trailerLink = document.getElementById("trailerLink").value.trim(); // New field
+    const trailerLink = document.getElementById("trailerLink").value.trim();
     const downloadLink = document.getElementById("downloadLink").value.trim();
     const hasDownload = document.getElementById("hasDownload").checked;
+    
+    // Get genres and rating
+    const genres = selectedGenres.join(', ');
+    const rating = currentRating;
     
     if (!title || !paragraphValue || !imageURL) {
         showAlert("Please fill in all required fields: Title, Content, and Image URL", "warning");
         return;
     }
     
-    // Check if image is base64 and warn user
     if (imageURL.startsWith('data:image') && imageURL.length > 50000) {
         const shouldContinue = confirm('The image is very large (base64). This may cause upload issues.\n\nRecommendation: Use an external image URL instead.\n\nDo you want to continue?');
         if (!shouldContinue) {
@@ -245,15 +470,16 @@ async function uploadPost() {
     debugLog('Uploading post (title):', title);
     
     try {
-        // Use SIMPLE form submission - individual fields
         const formData = new FormData();
         formData.append('action', 'addPost');
         formData.append('title', title);
         formData.append('paragraph', paragraphValue);
         formData.append('imageURL', imageURL);
-        formData.append('trailerLink', trailerLink); // Add trailer link
+        formData.append('trailerLink', trailerLink);
         formData.append('downloadLink', downloadLink);
         formData.append('hasDownload', hasDownload ? 'true' : 'false');
+        formData.append('genres', genres);
+        formData.append('rating', rating);
         
         await submitFormData(formData);
         
@@ -265,11 +491,15 @@ async function uploadPost() {
         document.getElementById("trailerLink").value = "";
         document.getElementById("downloadLink").value = "";
         document.getElementById("hasDownload").checked = false;
+        document.getElementById("genreInput").value = "";
         
-        // Wait a moment for the post to be saved
+        // Clear genres and rating
+        selectedGenres = [];
+        currentRating = 0;
+        updateGenresDisplay();
+        updateRatingDisplay();
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Reload posts to see the new one
         await loadPostsWithJSONP();
         await loadStats();
         
@@ -281,22 +511,18 @@ async function uploadPost() {
     }
 }
 
-// Submit form data using fetch with no-cors
 async function submitFormData(formData) {
-    // Convert FormData to URL-encoded string
     const params = new URLSearchParams();
     for (const [key, value] of formData.entries()) {
         params.append(key, value);
     }
     
-    // Create a form and submit it (bypasses CORS)
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = API_URL;
-    form.target = '_blank'; // Open in new tab/window to avoid CORS
+    form.target = '_blank';
     form.style.display = 'none';
     
-    // Add all parameters as hidden inputs
     for (const [key, value] of formData.entries()) {
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -308,23 +534,19 @@ async function submitFormData(formData) {
     document.body.appendChild(form);
     form.submit();
     
-    // Remove form after submission
     setTimeout(() => {
         if (form.parentElement) {
             document.body.removeChild(form);
         }
     }, 1000);
     
-    // Since we can't get response due to CORS, assume success
     return Promise.resolve({ success: true });
 }
 
-// Load posts with JSONP - FIXED VERSION
 function loadPostsWithJSONP() {
     return new Promise((resolve, reject) => {
         const callbackName = 'postsCallback_' + Date.now();
         
-        // Define callback function BEFORE creating script
         window[callbackName] = function(data) {
             delete window[callbackName];
             if (script.parentElement) {
@@ -332,11 +554,8 @@ function loadPostsWithJSONP() {
             }
             
             const historyContainer = document.getElementById("postHistory");
-            
-            // Clear previous content
             historyContainer.innerHTML = "";
             
-            // Handle error response
             if (data && data.success === false) {
                 historyContainer.innerHTML = `
                     <div class="alert alert-warning">
@@ -351,7 +570,6 @@ function loadPostsWithJSONP() {
                 return;
             }
             
-            // Handle array response (posts)
             if (Array.isArray(data)) {
                 allPosts = data;
                 renderPostHistory();
@@ -359,7 +577,6 @@ function loadPostsWithJSONP() {
                 return;
             }
             
-            // No posts found
             if (!data || (Array.isArray(data) && data.length === 0)) {
                 historyContainer.innerHTML = `
                     <div class="text-center py-5">
@@ -376,14 +593,13 @@ function loadPostsWithJSONP() {
                 return;
             }
             
-            // Unexpected response format
             historyContainer.innerHTML = `
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Unexpected response format
                     <button class="btn btn-sm btn-outline-warning ms-3" onclick="loadPostsWithJSONP()">
                         <i class="fas fa-redo me-1"></i>Retry
-                    </button>
+                    </div>
                 </div>
             `;
             reject(new Error('Unexpected response format'));
@@ -416,7 +632,6 @@ function loadPostsWithJSONP() {
             reject(new Error('JSONP request failed'));
         };
         
-        // Timeout
         setTimeout(() => {
             if (script.parentElement) {
                 document.body.removeChild(script);
@@ -431,7 +646,6 @@ function loadPostsWithJSONP() {
     });
 }
 
-// Load post history (public function)
 async function loadPostHistory() {
     const historyContainer = document.getElementById("postHistory");
     historyContainer.innerHTML = `
@@ -450,7 +664,6 @@ async function loadPostHistory() {
     }
 }
 
-// Render post history
 function renderPostHistory() {
     const historyContainer = document.getElementById("postHistory");
     
@@ -470,7 +683,6 @@ function renderPostHistory() {
 
     historyContainer.innerHTML = "";
     
-    // Sort posts by date (newest first)
     allPosts.sort((a, b) => {
         try {
             return new Date(b.CreatedAt) - new Date(a.CreatedAt);
@@ -488,7 +700,6 @@ function renderPostHistory() {
         const badgeClass = hasDownload ? 'bg-success' : 'bg-secondary';
         const iconClass = hasDownload ? 'fa-download' : 'fa-ban';
         
-        // Format date
         let displayDate = post.CreatedAt;
         try {
             const date = new Date(post.CreatedAt);
@@ -505,14 +716,35 @@ function renderPostHistory() {
             console.warn('Date formatting error:', e);
         }
         
-        // Truncate paragraph for preview
         let paragraphPreview = post.Paragraph || '';
         if (paragraphPreview.length > 150) {
-            // Remove HTML tags for preview
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = paragraphPreview;
             paragraphPreview = tempDiv.textContent || tempDiv.innerText || '';
             paragraphPreview = paragraphPreview.substring(0, 147) + '...';
+        }
+        
+        // Create genre badges
+        let genreBadges = '';
+        if (post.Genres) {
+            const genres = post.Genres.split(',').map(g => g.trim()).filter(g => g);
+            genres.forEach(genre => {
+                genreBadges += `<span class="badge bg-purple me-1 mb-1"><i class="fas fa-tag me-1"></i>${genre}</span>`;
+            });
+        }
+        
+        // Create rating display
+        let ratingDisplay = '';
+        if (post.Rating && parseFloat(post.Rating) > 0) {
+            const rating = parseFloat(post.Rating);
+            ratingDisplay = `
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-star text-warning me-1"></i>
+                        Rating: <strong>${rating}/5</strong>
+                    </small>
+                </div>
+            `;
         }
         
         postCard.innerHTML = `
@@ -527,6 +759,15 @@ function renderPostHistory() {
                             </span>
                         </p>
                         <div class="card-text mb-2">${paragraphPreview}</div>
+                        
+                        ${genreBadges ? `
+                            <div class="mb-2">
+                                ${genreBadges}
+                            </div>
+                        ` : ''}
+                        
+                        ${ratingDisplay}
+                        
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <span class="badge ${badgeClass}">
                                 <i class="fas ${iconClass} me-1"></i>
@@ -568,9 +809,7 @@ function renderPostHistory() {
                             <button class="btn btn-danger btn-sm" onclick="deletePost('${post.ID}')">
                                 <i class="fas fa-trash me-1"></i>Delete
                             </button>
-                            <a href="?post=${post.ID}" target="_blank" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye me-1"></i>View Live
-                            </a>
+                            
                         </div>
                     </div>
                 </div>
@@ -580,15 +819,23 @@ function renderPostHistory() {
     });
 }
 
-// Load stats for dashboard
+// ===================================
+
+// <a href="?post=${post.ID}" target="_blank" class="btn btn-info btn-sm">
+//                                 <i class="fas fa-eye me-1"></i>View Live
+//                             </a>
+
+// ===================================
+
 async function loadStats() {
     const statsContainer = document.getElementById("statsContainer");
     
-    // Use the allPosts array that should already be loaded
     const totalPosts = allPosts.length;
     const postsWithDownload = allPosts.filter(p => p.HasDownload === "TRUE" || p.HasDownload === true).length;
     const postsWithImages = allPosts.filter(p => p.ImageURL && p.ImageURL.trim() !== '').length;
     const postsWithTrailer = allPosts.filter(p => p.TrailerLink && p.TrailerLink.trim() !== '').length;
+    const postsWithRating = allPosts.filter(p => p.Rating && parseFloat(p.Rating) > 0).length;
+    const postsWithGenres = allPosts.filter(p => p.Genres && p.Genres.trim() !== '').length;
     
     statsContainer.innerHTML = `
         <div class="row text-center">
@@ -616,6 +863,18 @@ async function loadStats() {
                     <p class="mb-0 small">With Trailer</p>
                 </div>
             </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="text-danger">${postsWithRating}</h3>
+                    <p class="mb-0 small">With Rating</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="text-purple">${postsWithGenres}</h3>
+                    <p class="mb-0 small">With Genres</p>
+                </div>
+            </div>
         </div>
         <div class="mt-3">
             <small class="text-muted">
@@ -629,53 +888,7 @@ async function loadStats() {
     `;
 }
 
-// Enhanced alert system
-function showAlert(message, type) {
-    // Remove existing alerts
-    const existingAlerts = document.querySelectorAll('.alert');
-    existingAlerts.forEach(alert => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    });
-    
-    const alertDiv = document.createElement("div");
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="fas ${getAlertIcon(type)} me-2"></i>
-            <div class="flex-grow-1">${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    // Add to page
-    const container = document.querySelector(".admin-container");
-    if (container.firstChild) {
-        container.insertBefore(alertDiv, container.firstChild);
-    } else {
-        container.appendChild(alertDiv);
-    }
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (alertDiv.parentElement) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
-
-function getAlertIcon(type) {
-    switch(type) {
-        case 'success': return 'fa-check-circle';
-        case 'danger': return 'fa-exclamation-circle';
-        case 'warning': return 'fa-exclamation-triangle';
-        case 'info': return 'fa-info-circle';
-        default: return 'fa-info-circle';
-    }
-}
-
-// Edit post function
+// ==================== EDIT FUNCTIONS ====================
 function editPost(postId) {
     const post = allPosts.find(p => p.ID == postId);
     if (!post) {
@@ -688,12 +901,20 @@ function editPost(postId) {
     document.getElementById("editParagraph").innerHTML = post.Paragraph || '';
     editParagraphValue = post.Paragraph || '';
     document.getElementById("editImageURL").value = post.ImageURL || '';
-    document.getElementById("editTrailerLink").value = post.TrailerLink || ''; // Add trailer link
+    document.getElementById("editTrailerLink").value = post.TrailerLink || '';
     document.getElementById("editDownloadLink").value = post.DownloadLink || '';
     
     const hasDownload = post.HasDownload === "TRUE" || post.HasDownload === true;
     document.getElementById("editHasDownload").checked = hasDownload;
-
+    
+    // Load genres
+    editSelectedGenres = post.Genres ? post.Genres.split(',').map(g => g.trim()).filter(g => g) : [];
+    updateEditGenresDisplay();
+    
+    // Load rating
+    editCurrentRating = post.Rating ? parseFloat(post.Rating) : 0;
+    updateEditRatingDisplay();
+    
     const editModal = new bootstrap.Modal(document.getElementById("editModal"));
     editModal.show();
 }
@@ -702,38 +923,40 @@ async function updatePost() {
     const postId = document.getElementById("editId").value;
     const title = document.getElementById("editTitle").value.trim();
     const imageURL = document.getElementById("editImageURL").value.trim();
-    const trailerLink = document.getElementById("editTrailerLink").value.trim(); // Add trailer link
+    const trailerLink = document.getElementById("editTrailerLink").value.trim();
     const downloadLink = document.getElementById("editDownloadLink").value.trim();
     const hasDownload = document.getElementById("editHasDownload").checked;
+    
+    // Get genres and rating
+    const genres = editSelectedGenres.join(', ');
+    const rating = editCurrentRating;
     
     if (!title || !editParagraphValue || !imageURL) {
         showAlert("Please fill in all required fields", "warning");
         return;
     }
     
-    debugLog('Updating post ID:', postId);
+    debugLog('Updating post with genres:', genres, 'rating:', rating);
     
     try {
-        // Use SIMPLE form submission - individual fields
         const formData = new FormData();
         formData.append('action', 'updatePost');
         formData.append('id', postId);
         formData.append('title', title);
         formData.append('paragraph', editParagraphValue);
         formData.append('imageURL', imageURL);
-        formData.append('trailerLink', trailerLink); // Add trailer link
+        formData.append('trailerLink', trailerLink);
         formData.append('downloadLink', downloadLink);
         formData.append('hasDownload', hasDownload ? 'true' : 'false');
+        formData.append('genres', genres);
+        formData.append('rating', rating);
         
         await submitFormData(formData);
         
         showAlert("Post updated successfully!", "success");
         bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         
-        // Wait a moment for the update to be saved
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Reload posts
         await loadPostsWithJSONP();
         await loadStats();
         
@@ -751,7 +974,6 @@ async function deletePost(postId) {
     debugLog('Deleting post ID:', postId);
     
     try {
-        // Use SIMPLE form submission - individual fields
         const formData = new FormData();
         formData.append('action', 'deletePost');
         formData.append('id', postId);
@@ -760,10 +982,7 @@ async function deletePost(postId) {
         
         showAlert("Post deleted successfully!", "success");
         
-        // Wait a moment for the delete to be processed
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Reload posts
         await loadPostsWithJSONP();
         await loadStats();
         
@@ -773,32 +992,83 @@ async function deletePost(postId) {
     }
 }
 
-// Enter key to login
+// ==================== UTILITY FUNCTIONS ====================
+function showAlert(message, type) {
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    });
+    
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas ${getAlertIcon(type)} me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const container = document.querySelector(".admin-container");
+    if (container.firstChild) {
+        container.insertBefore(alertDiv, container.firstChild);
+    } else {
+        container.appendChild(alertDiv);
+    }
+    
+    setTimeout(() => {
+        if (alertDiv.parentElement) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+function getAlertIcon(type) {
+    switch(type) {
+        case 'success': return 'fa-check-circle';
+        case 'danger': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        case 'info': return 'fa-info-circle';
+        default: return 'fa-info-circle';
+    }
+}
+
 function handleKeyPress(event) {
     if (event.key === 'Enter') {
         login();
     }
 }
 
-// Initialize when page loads
+// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
     debugLog('Admin panel loaded');
     
-    // Check for existing login session
+    // Initialize genres and rating
+    initGenres();
+    initRating();
+    
+    // Add Enter key support for genre input
+    document.getElementById('genreInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addGenreFromInput();
+        }
+    });
+    
+    document.getElementById('editGenreInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addEditGenreFromInput();
+        }
+    });
+    
     const isLoggedIn = checkExistingLogin();
     
-    // If not auto-logged in, focus on username
     if (!isLoggedIn) {
         document.getElementById('username').focus();
     }
     
-    // Add enter key listener
     document.getElementById('password').addEventListener('keypress', handleKeyPress);
-    
-    // Auto-fill test credentials in development
-    // if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    //     document.getElementById('username').value = 'admin';
-    //     document.getElementById('password').value = 'password123';
-    //     showAlert('Test credentials filled. Click Login to continue.', 'info');
-    // }
 });

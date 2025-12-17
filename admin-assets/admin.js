@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyEHRDgn3RSRJJoV5537TjotyVju0PnWabYRVzI8L0Kvpb47baVwmdw_Cxo40EdmmAaWA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyAqEcJV9zhQ8iOvbjG6xqVf6NnqbBVDxFGgoYXR_cRG9QMYZZWghS4fREQmtSkIf75/exec";
 let allPosts = [];
 let loginAttempts = 0;
 const MAX_LOGIN_ATTEMPTS = 3;
@@ -1071,4 +1071,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     document.getElementById('password').addEventListener('keypress', handleKeyPress);
+
 });
